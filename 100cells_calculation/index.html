@@ -367,58 +367,40 @@ const e_time=document.getElementById('timer-view');
 const e_th=$('.tabel-border th');
 const a_contentCelect=['＋','ー','X'];
 const v_inputAll=81;
-/*const v_firstHtml='<div><button onclick="f_contentSet(0)">+</button><button onclick="f_contentSet(1)">-</button><button onclick="f_contentSet(2)">x</button></div>';*/
 let a_qu=[];
 let v_quAll=18;
 let v_level=0;
 let v_maxLevel;
 let v_halfLevel;
 let v_firstHtml="";
-let v_oldStorage=0;
 let v_storage=0;
-let a_storage=[[v_1starTime],[v_1starTime],[v_1starTime]];
+let a_storage=[[],[],[]];
+let a_nowSelect=[0,0,0];
 if (typeof localStorage == 'undefined') {
   v_firstHtml='<div><button onclick="f_contentSet(0)">+</button><button onclick="f_contentSet(1)">-</button><button onclick="f_contentSet(2)">x</button></div>';
 }else{
-  v_oldStorage=localStorage.getItem("userLevel");
   v_storage=localStorage.getItem("userLevel-2");
-  if(v_oldStorage){
-    let a_oldStorage=v_oldStorage.split(",");
-    for(let v_i=0;v_i<3;v_i++){
-      let v_oldLevel=Number(a_oldStorage[v_i]);
-      for(let v_ii=0;v_ii<v_oldLevel;v_ii++){
-        a_storage[v_i][v_ii]=v_2starTime;
-      }
-    }
-    localStorage.setItem("userLevel-2",JSON.stringify(a_storage));
-    localStorage.removeItem("userLevel");
-  }
+  let v_nowSelect=localStorage.getItem("userNowLevel");
   if(v_storage){
     a_storage=JSON.parse(v_storage);
   }
-/*
-  for(let v_i=0;v_i<3;v_i++){
-    v_firstHtml+='<div><button onclick="f_contentSet('+v_i+')">'+a_contentCelect[v_i]+'</button><select>';
-    let v_all=Number(a_storage[v_i])+1;
-    for(let v_ii=0;v_ii<v_all;v_ii++){
-      let v_selected=""
-      if(v_ii==(v_all-1)){
-        v_selected=' selected';
-      }
-      v_firstHtml+='<option value="'+v_ii+'"'+v_selected+'>Level:'+(v_ii+1)+'</option>';
-    }
-    v_firstHtml+='</select></div>';
-  }*/
+  if(v_nowSelect){
+    a_nowSelect=JSON.parse(v_nowSelect);
+  }
 }
 function f_firstHtmlMake(){
   v_firstHtml="";
   for(let v_i=0;v_i<3;v_i++){
     v_firstHtml+='<div><button onclick="f_contentSet('+v_i+')">'+a_contentCelect[v_i]+'</button><select>';
     let v_all=Number(a_storage[v_i].length);
-    console.log(v_all);
+    if(v_i<2){
+      v_all=99;
+    }else{
+      v_all=39;
+    }
     for(let v_ii=0;v_ii<v_all;v_ii++){
       let v_selected=""
-      if(v_ii==(v_all-1)){
+      if(v_ii==a_nowSelect[v_i]){
         v_selected=' selected';
       }
       let v_score=a_storage[v_i][v_ii];
@@ -428,14 +410,6 @@ function f_firstHtmlMake(){
   }
   return v_firstHtml;
 }
-//読み込み
-//localStorage.getItem("userLevel");
-/*
-//書き込み
-localStorage.setItem("key","data");
-//削除
-localStorage.removeItem("key");
-*/
 function f_changeColor(v_color){
   e_time.style.color=v_color;
   $('.tabel-border th').css('background-color',v_color);
@@ -454,6 +428,8 @@ function f_contentSet(v_n){
   a_qux=f_aShuffle(Array.from(a_no10));
   a_quy=f_aShuffle(Array.from(a_no10));
   v_level=Number($('select:eq('+v_n+') option:selected').val());
+  a_nowSelect[v_n]=v_level;
+  localStorage.setItem("userNowLevel",JSON.stringify(a_nowSelect));
   if(v_level<v_halfLevel){
     for(let v_i=0;v_i<9;v_i++){
       a_qux[v_i]+=v_level;
@@ -498,8 +474,7 @@ function f_contentSet(v_n){
     $('#js-result th:eq('+(v_i+1)+')').html(a_qu[v_i]);
   }
 
-  //test
-  /*
+  /*//test
   for(let v_i=0;v_i<80;v_i++){
     $("input[type=number]:eq("+v_i+")").val(a_ans[v_i]);
   }*/
@@ -532,23 +507,7 @@ function f_time(){
   let a_return=[v_min,v_sec,v_msec,v_dif];
   return [v_min,v_sec,v_msec,v_dif];
 }
-/*$('input[type=number]').focus(function(){
-  $(this).select();
-}).click(function(){
-  $(this).select();
-  return false;
-});*/
-
-
-/*for(let v_i=0;v_i<v_quAll;v_i++){
-  $('#js-result th:eq('+(v_i+1)+')').html(a_qu[v_i]);
-  /*if(v_i<(v_quAll-1)){
-    let v_n=v_i+2;
-    v_btnHtml+='<button value="'+v_n+'" onclick="f_set('+v_n+')">'+v_n+'</button>';
-  }
-}*/
 f_setContentInfo('<div><h1>100マスター</h1>'+f_firstHtmlMake()+'</div>');
-/*document.getElementById('btn-set').innerHTML=v_btnHtml;*/
 $('#js-result td').each(function(){
   $(this).html('<input type="number" min="1" pattern="[0-9]*">');
 });
@@ -579,13 +538,6 @@ function f_aShuffle(as){
   }
   return as;
 }
-/*function f_set(v_n){
-  $('input:eq('+v_input+')').val(v_n);
-  v_input++;
-  f_serectClass();
-  f_check();
-  //f_nextSelect();
-}*/
 function f_nextSelect(){
   v_input++;
   $('input:eq('+v_input+')').select();
@@ -628,9 +580,11 @@ function f_check(){
       }else{
         v_starHtml='<svg class="fill-bad"><use xlink:href="#flower"/></svg><svg class="fill-bad"><use xlink:href="#flower"/></svg><svg class="fill-bad"><use xlink:href="#flower"/></svg>';
       }
-      //v_starHtml+=f_starHtml(v_nowTime);
-      //if(v_level<v_maxLevel && a_time[3]<v_1starTime && v_level==a_storage[v_mathType]){
-      if(v_nowTime<a_storage[v_mathType][v_level]){
+      let v_nowLevel=a_storage[v_mathType][v_level];
+      if(!v_nowLevel){
+        v_nowLevel=v_1starTime;
+      }
+      if(v_nowTime<v_nowLevel){
         a_storage[v_mathType][v_level]=v_nowTime;
         if(v_level<v_maxLevel && v_level==(a_storage[v_mathType].length-1)){
           a_storage[v_mathType][v_level+1]=v_1starTime;
@@ -648,6 +602,10 @@ function f_setContentInfo(v_html){
 }
 function f_starHtml(v_n){
   let v_starHtml='';
+  v_n=parseInt(v_n);
+  if(v_n==0){
+    v_n=v_1starTime;
+  }
   if(v_n<v_3starTime){
     v_starHtml+='&#x1f33c;&#x1f33c;&#x1f33c;';
   }else if(v_n<v_2starTime){
